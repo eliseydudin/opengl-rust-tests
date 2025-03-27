@@ -93,13 +93,13 @@ fn main() -> Result<(), AnyError> {
     set_clear_color(0.3, 0.8, 1.0, 1.0);
 
     let view = glm::look_at(
-        &-glm::vec3(4.0, 4.0, 0.0),
+        &-glm::vec3(2.0, 2.0, 0.0),
         &glm::vec3(0.0, 0.0, 0.0),
         &glm::vec3(0.0, 1.0, 0.0),
     );
     //let view = glm::inverse(&view);
 
-    let projection = glm::perspective(640.0 / 480.0, 45.0_f32.to_radians(), 0.1, 100.0);
+    let projection = glm::perspective(640.0 / 480.0, 90.0_f32.to_radians(), 0.1, 100.0);
     let mut model = glm::Mat4::from_fn(|i, j| if i == j { 1.0 } else { 0.0 });
 
     let mut time_prev = timer.ticks64();
