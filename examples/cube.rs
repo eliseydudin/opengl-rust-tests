@@ -29,12 +29,10 @@ layout (location = 0) in vec3 position;
 layout (location = 1) in vec3 color;
 out vec3 fragment_color;
 
-uniform mat4 projection;
-uniform mat4 view;
-uniform mat4 model;
+uniform mat4 mvp;
 
 void main() {
-    gl_Position = projection * view * model * vec4(position, 1.0);
+    gl_Position = mvp * vec4(position, 1.0);
     fragment_color = color;
 }
 "#;
@@ -97,16 +95,17 @@ fn main() -> Result<(), AnyError> {
         1.0,
     );
 
-    let view = glm::look_at(
-        &-glm::vec3(2.0, 2.0, 0.0),
-        &glm::vec3(0.0, 0.0, 0.0),
-        &glm::vec3(0.0, 1.0, 0.0),
-    );
-    //let view = glm::inverse(&view);
+    let mut camera = camera::Camera::new((640, 480));
+    camera.position = glm::vec3(2.0, 2.0, 0.0);
 
-    let projection = glm::perspective(640.0 / 480.0, 90.0_f32.to_radians(), 0.1, 100.0);
+    //let view = glm::look_at(
+    //    &-glm::vec3(2.0, 2.0, 0.0),
+    //    &glm::vec3(0.0, 0.0, 0.0),
+    //    &glm::vec3(0.0, 1.0, 0.0),
+    //);
+
+    //let projection = glm::perspective(640.0 / 480.0, 90.0_f32.to_radians(), 0.1, 100.0);
     let mut model = glm::Mat4::from_fn(|i, j| if i == j { 1.0 } else { 0.0 });
-
     let mut time_prev = timer.ticks64();
 
     'running: loop {
@@ -119,9 +118,12 @@ fn main() -> Result<(), AnyError> {
             (delta / 25.0).to_radians(),
             &glm::vec3(1.0, 0.0, 0.0),
         );
-        program.put_uniform("model", model)?;
-        program.put_uniform("view", view)?;
-        program.put_uniform("projection", projection)?;
+
+        let mvp = camera.calculate_projection() * camera.calculate_view() * model;
+        program.put_uniform("mvp", mvp)?;
+        //program.put_uniform("model", model)?;
+        //program.put_uniform("view", view)?;
+        //program.put_uniform("projection", projection)?;
 
         for event in events.poll_iter() {
             match event {

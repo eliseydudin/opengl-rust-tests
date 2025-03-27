@@ -1,6 +1,7 @@
 use core::ops;
 
 pub mod buffer;
+pub mod camera;
 pub mod shader;
 pub mod vao;
 
