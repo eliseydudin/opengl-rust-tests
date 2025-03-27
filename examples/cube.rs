@@ -90,7 +90,12 @@ fn main() -> Result<(), AnyError> {
     setup_attribute(1, 3, 0, 0);
 
     enable_depth();
-    set_clear_color(0.3, 0.8, 1.0, 1.0);
+    set_clear_color(
+        0x13 as f32 / 255.0,
+        0x17 as f32 / 255.0,
+        0x21 as f32 / 255.0,
+        1.0,
+    );
 
     let view = glm::look_at(
         &-glm::vec3(2.0, 2.0, 0.0),
