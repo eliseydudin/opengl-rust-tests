@@ -38,6 +38,7 @@ pub enum ShaderError {
     CompilationError(String),
     LinkingError(String),
     CStringConversion(NulError),
+    UnknownUniformLocation(String),
 }
 
 impl fmt::Display for ShaderError {
@@ -48,6 +49,7 @@ impl fmt::Display for ShaderError {
                 write!(f, "Cannot convert string to a C pointer: {err}")
             }
             Self::LinkingError(err) => write!(f, "Cannot link the shaders: {err}"),
+            Self::UnknownUniformLocation(s) => write!(f, "Unknown uniform location: {s}"),
         }
     }
 }
@@ -157,6 +159,26 @@ impl Program {
     pub fn use_internal(&self) {
         unsafe { gl::UseProgram(self.id) }
     }
+
+    pub fn put_uniform<U>(&self, position: &str, uniform: U) -> Result<(), ShaderError>
+    where
+        U: Uniform,
+    {
+        let uniform_position = match CString::new(position) {
+            Ok(pos) => pos,
+            Err(e) => return Err(ShaderError::CStringConversion(e)),
+        };
+
+        let uniform_position =
+            unsafe { gl::GetUniformLocation(self.id, uniform_position.as_ptr()) };
+        if uniform_position == -1 {
+            return Err(ShaderError::UnknownUniformLocation(position.to_owned()));
+        }
+
+        unsafe { uniform.put_uniform(uniform_position) };
+
+        Ok(())
+    }
 }
 
 impl Drop for Program {
@@ -176,5 +198,15 @@ pub fn setup_attribute(index: u32, size: i32, offset: u32, stride: i32) {
             stride * std::mem::size_of::<f32>() as i32,
             (offset * std::mem::size_of::<f32>() as u32) as *const _,
         );
+    }
+}
+
+pub trait Uniform {
+    unsafe fn put_uniform(&self, pos: i32);
+}
+
+impl Uniform for f32 {
+    unsafe fn put_uniform(&self, pos: i32) {
+        unsafe { gl::Uniform1f(pos, *self) }
     }
 }

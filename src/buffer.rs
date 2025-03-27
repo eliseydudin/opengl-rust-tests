@@ -19,20 +19,29 @@ pub enum DrawUsage {
 #[derive(Debug, Clone, Copy)]
 #[allow(unused)]
 pub enum DrawTarget {
-    ArrayBuffer = gl::ARRAY_BUFFER,
-    AtomicCounterBuffer = gl::ATOMIC_COUNTER_BUFFER,
-    CopyReadBuffer = gl::COPY_READ_BUFFER,
-    CopyWriteBuffer = gl::COPY_WRITE_BUFFER,
-    DispatchIndirectBuffer = gl::DISPATCH_INDIRECT_BUFFER,
-    DrawIndirectBuffer = gl::DRAW_INDIRECT_BUFFER,
-    ElementArrayBuffer = gl::ELEMENT_ARRAY_BUFFER,
-    PixelPackBuffer = gl::PIXEL_PACK_BUFFER,
-    PixelUnpackBuffer = gl::PIXEL_UNPACK_BUFFER,
-    QueryBuffer = gl::QUERY_BUFFER,
-    ShaderStorageBuffer = gl::SHADER_STORAGE_BUFFER,
-    TextureBuffer = gl::TEXTURE_BUFFER,
-    TransformFeedbackBuffer = gl::TRANSFORM_FEEDBACK_BUFFER,
-    UniformBuffer = gl::UNIFORM_BUFFER,
+    Array = gl::ARRAY_BUFFER,
+    AtomicCounter = gl::ATOMIC_COUNTER_BUFFER,
+    CopyRead = gl::COPY_READ_BUFFER,
+    CopyWrite = gl::COPY_WRITE_BUFFER,
+    DispatchIndirect = gl::DISPATCH_INDIRECT_BUFFER,
+    DrawIndirect = gl::DRAW_INDIRECT_BUFFER,
+    ElementArray = gl::ELEMENT_ARRAY_BUFFER,
+    PixelPack = gl::PIXEL_PACK_BUFFER,
+    PixelUnpack = gl::PIXEL_UNPACK_BUFFER,
+    Query = gl::QUERY_BUFFER,
+    ShaderStorage = gl::SHADER_STORAGE_BUFFER,
+    Texture = gl::TEXTURE_BUFFER,
+    TransformFeedback = gl::TRANSFORM_FEEDBACK_BUFFER,
+    Uniform = gl::UNIFORM_BUFFER,
+}
+
+#[repr(u32)]
+#[derive(Debug, Clone, Copy)]
+#[non_exhaustive]
+#[allow(unused)]
+pub enum DrawMode {
+    Triangles = gl::TRIANGLES,
+    /* TODO */
 }
 
 #[derive(Debug)]
@@ -65,6 +74,11 @@ impl Buffer {
                 draw_type as u32,
             )
         }
+    }
+
+    pub fn draw_arrays(&self, mode: DrawMode, first: i32, count: i32) {
+        self.bind();
+        unsafe { gl::DrawArrays(mode as u32, first, count) }
     }
 }
 

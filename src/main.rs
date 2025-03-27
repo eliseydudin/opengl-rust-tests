@@ -1,10 +1,10 @@
+mod buffer;
 mod shader;
 mod vao;
-mod vbo;
 
+use buffer::{Buffer, DrawTarget, DrawUsage};
 use shader::*;
 use vao::Vao;
-use vbo::{Buffer, DrawTarget, DrawUsage};
 pub type AnyError = Box<dyn std::error::Error>;
 
 const TRIANGLE_DATA: [f32; 15] = [
@@ -16,7 +16,7 @@ const TRIANGLE_DATA: [f32; 15] = [
     0.745, 0.8980, 0.749, // third color
 ];
 
-const VERTEX_SOURCE: &'static str = r#"
+const VERTEX_SOURCE: &str = r#"
 #version 330 core
 layout (location = 0) in vec2 position;
 layout (location = 1) in vec3 color;
@@ -27,12 +27,15 @@ void main() {
 }
 "#;
 
-const FRAGMENT_SOURCE: &'static str = r#"
+const FRAGMENT_SOURCE: &str = r#"
 #version 330 core
 in vec3 fragment_color;
 out vec4 color;
+
+uniform float time;
+
 void main() {
-    color = vec4(fragment_color, 1.0);
+    color = vec4(fragment_color * sin(time), 1.0);
 }
 "#;
 
@@ -56,13 +59,14 @@ fn main() -> Result<(), AnyError> {
     gl::load_with(|s| video.gl_get_proc_address(s) as *const _);
 
     let mut events = sdl.event_pump()?;
-    unsafe { gl::ClearColor(0.3, 0.5, 1.0, 1.0) };
+    let timer = sdl.timer()?;
+    unsafe { gl::ClearColor(0.3, 0.8, 1.0, 1.0) };
 
     let vao = Vao::new();
     vao.bind();
-    let vbo = Buffer::new(DrawTarget::ArrayBuffer);
-    vbo.bind();
-    vbo.data(&TRIANGLE_DATA, DrawUsage::StaticDraw);
+    let buffer = Buffer::new(DrawTarget::Array);
+    buffer.bind();
+    buffer.data(&TRIANGLE_DATA, DrawUsage::StaticDraw);
 
     let vertex_shader = Shader::new(VERTEX_SOURCE)?;
     let fragment_shader = Shader::new(FRAGMENT_SOURCE)?;
@@ -70,7 +74,6 @@ fn main() -> Result<(), AnyError> {
     program.use_internal();
 
     vao.bind();
-
     setup_attribute(0, 2, 0, 5);
     setup_attribute(1, 3, 2, 5);
 
@@ -82,9 +85,12 @@ fn main() -> Result<(), AnyError> {
             }
         }
 
-        unsafe { gl::DrawArrays(gl::TRIANGLES, 0, 3) };
-        window.gl_swap_window();
         unsafe { gl::Clear(gl::COLOR_BUFFER_BIT) }
+        buffer.draw_arrays(buffer::DrawMode::Triangles, 0, 3);
+        window.gl_swap_window();
+
+        let time = timer.ticks() as f32 / 500.0;
+        program.put_uniform("time", time)?;
     }
 
     Ok(())
