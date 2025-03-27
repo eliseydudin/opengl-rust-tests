@@ -175,6 +175,7 @@ impl Program {
             return Err(ShaderError::UnknownUniformLocation(position.to_owned()));
         }
 
+        self.use_internal();
         unsafe { uniform.put_uniform(uniform_position) };
 
         Ok(())
@@ -208,5 +209,11 @@ pub trait Uniform {
 impl Uniform for f32 {
     unsafe fn put_uniform(&self, pos: i32) {
         unsafe { gl::Uniform1f(pos, *self) }
+    }
+}
+
+impl Uniform for nalgebra_glm::Mat4 {
+    unsafe fn put_uniform(&self, pos: i32) {
+        unsafe { gl::UniformMatrix4fv(pos, 1, gl::FALSE, self.as_ptr()) }
     }
 }

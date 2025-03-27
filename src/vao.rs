@@ -1,3 +1,4 @@
+use super::DrawMode;
 use core::ptr;
 
 #[derive(Debug)]
@@ -18,6 +19,11 @@ impl Vao {
 
     pub fn bind(&self) {
         unsafe { gl::BindVertexArray(self.id) }
+    }
+
+    pub fn draw_arrays(&self, mode: DrawMode, first: i32, count: i32) {
+        self.bind();
+        unsafe { gl::DrawArrays(mode as u32, first, count) }
     }
 }
 

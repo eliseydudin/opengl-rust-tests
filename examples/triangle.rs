@@ -1,11 +1,4 @@
-mod buffer;
-mod shader;
-mod vao;
-
-use buffer::{Buffer, DrawTarget, DrawUsage};
-use shader::*;
-use vao::Vao;
-pub type AnyError = Box<dyn std::error::Error>;
+use gl_tests_god_save_me::*;
 
 const TRIANGLE_DATA: [f32; 15] = [
     0.0, 0.5, // first pos
@@ -21,8 +14,11 @@ const VERTEX_SOURCE: &str = r#"
 layout (location = 0) in vec2 position;
 layout (location = 1) in vec3 color;
 out vec3 fragment_color;
+
+uniform float time;
+
 void main() {
-    gl_Position = vec4(position, 1.0, 1.0);
+    gl_Position = vec4(position * cos(time), 1.0, 1.0);
     fragment_color = color;
 }
 "#;
@@ -35,7 +31,7 @@ out vec4 color;
 uniform float time;
 
 void main() {
-    color = vec4(fragment_color * sin(time), 1.0);
+    color = vec4(fragment_color * (sin(time) + 0.5), 1.0);
 }
 "#;
 
@@ -60,7 +56,7 @@ fn main() -> Result<(), AnyError> {
 
     let mut events = sdl.event_pump()?;
     let timer = sdl.timer()?;
-    unsafe { gl::ClearColor(0.3, 0.8, 1.0, 1.0) };
+    set_clear_color(0.3, 0.8, 1.0, 1.0);
 
     let vao = Vao::new();
     vao.bind();
@@ -77,6 +73,8 @@ fn main() -> Result<(), AnyError> {
     setup_attribute(0, 2, 0, 5);
     setup_attribute(1, 3, 2, 5);
 
+    enable_depth();
+
     'running: loop {
         for event in events.poll_iter() {
             match event {
@@ -85,8 +83,8 @@ fn main() -> Result<(), AnyError> {
             }
         }
 
-        unsafe { gl::Clear(gl::COLOR_BUFFER_BIT) }
-        buffer.draw_arrays(buffer::DrawMode::Triangles, 0, 3);
+        clear();
+        vao.draw_arrays(buffer::DrawMode::Triangles, 0, 3);
         window.gl_swap_window();
 
         let time = timer.ticks() as f32 / 500.0;
