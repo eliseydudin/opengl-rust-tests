@@ -132,7 +132,7 @@ fn main() -> Result<(), AnyError> {
             }
         }
 
-        clear();
+        clear(ClearFlags::COLOR | ClearFlags::DEPTH);
         vao.draw_arrays(buffer::DrawMode::Triangles, 0, 36);
         window.gl_swap_window();
         timer.delay(1);

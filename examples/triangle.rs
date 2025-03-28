@@ -81,7 +81,7 @@ fn main() -> Result<(), AnyError> {
             }
         }
 
-        clear();
+        clear(ClearFlags::COLOR);
         vao.draw_arrays(buffer::DrawMode::Triangles, 0, 3);
         window.gl_swap_window();
 

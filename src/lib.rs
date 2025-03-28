@@ -3,9 +3,10 @@ use core::ops;
 pub mod buffer;
 pub mod camera;
 pub mod shader;
+pub mod texture;
 pub mod vao;
 
-pub use {buffer::*, shader::*, vao::*};
+pub use {buffer::*, shader::*, texture::*, vao::*};
 pub type AnyError = Box<dyn std::error::Error>;
 
 pub struct ClearFlags(u32);
@@ -25,8 +26,8 @@ impl ops::BitOr for ClearFlags {
     }
 }
 
-pub fn clear() {
-    unsafe { gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT) }
+pub fn clear(clear_flags: ClearFlags) {
+    unsafe { gl::Clear(clear_flags.0) }
 }
 
 pub fn set_clear_color(r: f32, g: f32, b: f32, a: f32) {

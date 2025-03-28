@@ -1,34 +1,43 @@
 use gl_tests_god_save_me::*;
+use image::{EncodableLayout, ImageReader};
 use nalgebra_glm as glm;
+use russimp::{
+    mesh::Mesh,
+    scene::{PostProcess, Scene},
+};
 use sdl2::event::{Event, WindowEvent};
-use tobj::LoadOptions;
 
-fn load_pyramid() -> Result<tobj::Mesh, AnyError> {
-    let obj = tobj::load_obj("assets/pyramid.obj", &LoadOptions::default())?;
-    let model = obj.0.into_iter().nth(0).unwrap();
-    Ok(model.mesh)
+fn load_pyramid() -> Result<Mesh, AnyError> {
+    let scene = Scene::from_file("assets/pyramid.obj", vec![PostProcess::Triangulate])?;
+    Ok(scene.meshes.into_iter().nth(0).unwrap())
 }
 
 const VERTEX_SOURCE: &str = r#"
 #version 330 core
 layout (location = 0) in vec3 position;
+layout (location = 1) in vec2 uv;
 out vec3 fragment_color;
+out vec2 frag_uv;
 
 uniform mat4 mvp;
 
 void main() {
     gl_Position = mvp * vec4(position, 1.0);
     fragment_color = vec3(1.0);
+    frag_uv = uv;
 }
 "#;
 
 const FRAGMENT_SOURCE: &str = r#"
 #version 330 core
 in vec3 fragment_color;
+in vec2 frag_uv;
 out vec4 color;
 
+uniform sampler2D pyramid_texture;
+
 void main() {
-    color = vec4(fragment_color, 1.0);
+    color = vec4(fragment_color, 1.0) * texture(pyramid_texture, frag_uv);
 }
 "#;
 
@@ -64,17 +73,57 @@ fn main() -> Result<(), AnyError> {
     program.use_internal();
 
     let mesh = load_pyramid()?;
+    let mut positions = vec![];
+    mesh.vertices.iter().for_each(|s| {
+        positions.push(s.x);
+        positions.push(s.y);
+        positions.push(s.z);
+    });
+
+    let mut indices = vec![];
+    mesh.faces.iter().for_each(|f| {
+        for ind in &f.0 {
+            indices.push(*ind);
+        }
+    });
+
+    let mut texcoords = vec![];
+    (0..(positions.len() / 3)).for_each(|_s| {
+        texcoords.push(0.0_f32);
+        texcoords.push(0.0_f32);
+
+        texcoords.push(0.5_f32);
+        texcoords.push(1.0_f32);
+
+        texcoords.push(1.0_f32);
+        texcoords.push(0.0_f32);
+    });
+
+    // let mut texcoords = vec![];
+    // mesh.texture_coords[0]
+    //     .as_ref()
+    //     .unwrap()
+    //     .iter()
+    //     .for_each(|tx| {
+    //         texcoords.push(tx.x);
+    //         texcoords.push(tx.y);
+    //     });
 
     let vbo = Buffer::new(DrawTarget::Array);
     vbo.bind();
-    vbo.data(&mesh.positions, DrawUsage::StaticDraw);
+    vbo.data(&positions, DrawUsage::StaticDraw);
     setup_attribute(0, 3, 0, 0, AttributeType::f32);
 
-    let indices = mesh.indices.len() as i32;
+    let vbo_uv = Buffer::new(DrawTarget::Array);
+    vbo_uv.bind();
+    vbo_uv.data(&texcoords, DrawUsage::StaticDraw);
+    setup_attribute(1, 2, 0, 0, AttributeType::f32);
 
     let ebo = Buffer::new(DrawTarget::ElementArray);
     ebo.bind();
-    ebo.data(&mesh.indices, DrawUsage::StaticDraw);
+    ebo.data(&indices, DrawUsage::StaticDraw);
+
+    let indices = indices.len() as i32;
 
     enable_depth();
     set_clear_color(
@@ -86,6 +135,23 @@ fn main() -> Result<(), AnyError> {
 
     let mut camera = camera::Camera::new((640, 480));
     camera.position = glm::vec3(1.0, 2.0, 0.0);
+
+    // TEXTURE :D
+    let image = ImageReader::open("assets/osakr.png")?
+        .decode()?
+        //.flipv()
+        .fliph()
+        .to_rgba8();
+
+    let texture = Texture::new(
+        image.as_bytes(),
+        image.width() as i32,
+        image.height() as i32,
+    );
+
+    let active_texture = ActiveTexture::new(0);
+    active_texture.bind_texture(&texture);
+    program.put_uniform("pyramid_texture", active_texture)?;
 
     let mut model = glm::Mat4::from_fn(|i, j| if i == j { 1.0 } else { 0.0 });
     let mut time_prev = timer.ticks64();
@@ -120,7 +186,7 @@ fn main() -> Result<(), AnyError> {
             }
         }
 
-        clear();
+        clear(ClearFlags::COLOR | ClearFlags::DEPTH);
         vao.draw_elements(DrawMode::Triangles, indices, AttributeType::u32);
         window.gl_swap_window();
         timer.delay(1);
