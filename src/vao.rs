@@ -1,5 +1,8 @@
+use crate::AttributeType;
+
 use super::DrawMode;
 use core::ptr;
+use std::ptr::null;
 
 #[derive(Debug)]
 pub struct Vao {
@@ -24,6 +27,11 @@ impl Vao {
     pub fn draw_arrays(&self, mode: DrawMode, first: i32, count: i32) {
         self.bind();
         unsafe { gl::DrawArrays(mode as u32, first, count) }
+    }
+
+    pub fn draw_elements(&self, mode: DrawMode, count: i32, atype: AttributeType) {
+        self.bind();
+        unsafe { gl::DrawElements(mode as u32, count, atype as u32, null()) }
     }
 }
 

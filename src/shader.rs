@@ -188,13 +188,35 @@ impl Drop for Program {
     }
 }
 
-pub fn setup_attribute(index: u32, size: i32, offset: u32, stride: i32) {
+#[repr(u32)]
+#[allow(non_camel_case_types)]
+#[derive(Clone, Copy)]
+pub enum AttributeType {
+    i8 = gl::BYTE,
+    u8 = gl::UNSIGNED_BYTE,
+    i16 = gl::SHORT,
+    u16 = gl::UNSIGNED_SHORT,
+    f32 = gl::FLOAT,
+    f16 = gl::HALF_FLOAT,
+    f64 = gl::DOUBLE,
+    i32 = gl::INT,
+    u32 = gl::UNSIGNED_INT,
+    fixed = gl::FIXED,
+}
+
+pub fn setup_attribute(
+    index: u32,
+    size: i32,
+    offset: u32,
+    stride: i32,
+    attribute_type: AttributeType,
+) {
     unsafe {
         gl::EnableVertexAttribArray(index);
         gl::VertexAttribPointer(
             index,
             size,
-            gl::FLOAT,
+            attribute_type as u32,
             gl::FALSE,
             stride * std::mem::size_of::<f32>() as i32,
             (offset * std::mem::size_of::<f32>() as u32) as *const _,

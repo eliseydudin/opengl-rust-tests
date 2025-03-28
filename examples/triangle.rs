@@ -70,10 +70,8 @@ fn main() -> Result<(), AnyError> {
     program.use_internal();
 
     vao.bind();
-    setup_attribute(0, 2, 0, 5);
-    setup_attribute(1, 3, 2, 5);
-
-    enable_depth();
+    setup_attribute(0, 2, 0, 5, AttributeType::f32);
+    setup_attribute(1, 3, 2, 5, AttributeType::f32);
 
     'running: loop {
         for event in events.poll_iter() {

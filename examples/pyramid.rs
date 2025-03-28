@@ -1,39 +1,24 @@
 use gl_tests_god_save_me::*;
 use nalgebra_glm as glm;
+use sdl2::event::{Event, WindowEvent};
+use tobj::LoadOptions;
 
-const CUBE_VERTICES: &[f32] = &[
-    -0.5, -0.5, -0.5, 0.5, -0.5, -0.5, 0.5, 0.5, -0.5, 0.5, 0.5, -0.5, -0.5, 0.5, -0.5, -0.5, -0.5,
-    -0.5, -0.5, -0.5, 0.5, 0.5, -0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, -0.5, 0.5, 0.5, -0.5,
-    -0.5, 0.5, -0.5, 0.5, 0.5, -0.5, 0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5,
-    0.5, -0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, -0.5, 0.5, -0.5, -0.5, 0.5, -0.5, -0.5, 0.5,
-    -0.5, 0.5, 0.5, 0.5, 0.5, -0.5, -0.5, -0.5, 0.5, -0.5, -0.5, 0.5, -0.5, 0.5, 0.5, -0.5, 0.5,
-    -0.5, -0.5, 0.5, -0.5, -0.5, -0.5, -0.5, 0.5, -0.5, 0.5, 0.5, -0.5, 0.5, 0.5, 0.5, 0.5, 0.5,
-    0.5, -0.5, 0.5, 0.5, -0.5, 0.5, -0.5,
-];
-
-const CUBE_COLORS: &[f32] = &[
-    0.583, 0.771, 0.014, 0.609, 0.115, 0.436, 0.327, 0.483, 0.844, 0.822, 0.569, 0.201, 0.435,
-    0.602, 0.223, 0.310, 0.747, 0.185, 0.597, 0.770, 0.761, 0.559, 0.436, 0.730, 0.359, 0.583,
-    0.152, 0.483, 0.596, 0.789, 0.559, 0.861, 0.639, 0.195, 0.548, 0.859, 0.014, 0.184, 0.576,
-    0.771, 0.328, 0.970, 0.406, 0.615, 0.116, 0.676, 0.977, 0.133, 0.971, 0.572, 0.833, 0.140,
-    0.616, 0.489, 0.997, 0.513, 0.064, 0.945, 0.719, 0.592, 0.543, 0.021, 0.978, 0.279, 0.317,
-    0.505, 0.167, 0.620, 0.077, 0.347, 0.857, 0.137, 0.055, 0.953, 0.042, 0.714, 0.505, 0.345,
-    0.783, 0.290, 0.734, 0.722, 0.645, 0.174, 0.302, 0.455, 0.848, 0.225, 0.587, 0.040, 0.517,
-    0.713, 0.338, 0.053, 0.959, 0.120, 0.393, 0.621, 0.362, 0.673, 0.211, 0.457, 0.820, 0.883,
-    0.371, 0.982, 0.099, 0.879,
-];
+fn load_pyramid() -> Result<tobj::Mesh, AnyError> {
+    let obj = tobj::load_obj("assets/pyramid.obj", &LoadOptions::default())?;
+    let model = obj.0.into_iter().nth(0).unwrap();
+    Ok(model.mesh)
+}
 
 const VERTEX_SOURCE: &str = r#"
 #version 330 core
 layout (location = 0) in vec3 position;
-layout (location = 1) in vec3 color;
 out vec3 fragment_color;
 
 uniform mat4 mvp;
 
 void main() {
     gl_Position = mvp * vec4(position, 1.0);
-    fragment_color = color;
+    fragment_color = vec3(1.0);
 }
 "#;
 
@@ -54,6 +39,7 @@ fn main() -> Result<(), AnyError> {
         .window("hai :3", 640, 480)
         .allow_highdpi()
         .opengl()
+        .resizable()
         .build()?;
 
     let attr = video.gl_attr();
@@ -77,15 +63,18 @@ fn main() -> Result<(), AnyError> {
     let program = Program::new(vertex_shader, fragment_shader)?;
     program.use_internal();
 
-    let buffer_vertices = Buffer::new(DrawTarget::Array);
-    buffer_vertices.bind();
-    buffer_vertices.data(&CUBE_VERTICES, DrawUsage::StaticDraw);
+    let mesh = load_pyramid()?;
+
+    let vbo = Buffer::new(DrawTarget::Array);
+    vbo.bind();
+    vbo.data(&mesh.positions, DrawUsage::StaticDraw);
     setup_attribute(0, 3, 0, 0, AttributeType::f32);
 
-    let buffer_colors = Buffer::new(DrawTarget::Array);
-    buffer_colors.bind();
-    buffer_colors.data(&CUBE_COLORS, DrawUsage::StaticDraw);
-    setup_attribute(1, 3, 0, 0, AttributeType::f32);
+    let indices = mesh.indices.len() as i32;
+
+    let ebo = Buffer::new(DrawTarget::ElementArray);
+    ebo.bind();
+    ebo.data(&mesh.indices, DrawUsage::StaticDraw);
 
     enable_depth();
     set_clear_color(
@@ -96,15 +85,8 @@ fn main() -> Result<(), AnyError> {
     );
 
     let mut camera = camera::Camera::new((640, 480));
-    camera.position = glm::vec3(2.0, 2.0, 0.0);
+    camera.position = glm::vec3(1.0, 2.0, 0.0);
 
-    //let view = glm::look_at(
-    //    &-glm::vec3(2.0, 2.0, 0.0),
-    //    &glm::vec3(0.0, 0.0, 0.0),
-    //    &glm::vec3(0.0, 1.0, 0.0),
-    //);
-
-    //let projection = glm::perspective(640.0 / 480.0, 90.0_f32.to_radians(), 0.1, 100.0);
     let mut model = glm::Mat4::from_fn(|i, j| if i == j { 1.0 } else { 0.0 });
     let mut time_prev = timer.ticks64();
 
@@ -127,13 +109,19 @@ fn main() -> Result<(), AnyError> {
 
         for event in events.poll_iter() {
             match event {
-                sdl2::event::Event::Quit { .. } => break 'running,
+                Event::Quit { .. } => break 'running,
+                Event::Window { win_event, .. } => {
+                    if let WindowEvent::Resized(x, y) = win_event {
+                        camera.window_size = (x as u32, y as u32);
+                        resize_viewport((x, y));
+                    }
+                }
                 _ => (),
             }
         }
 
         clear();
-        vao.draw_arrays(buffer::DrawMode::Triangles, 0, 36);
+        vao.draw_elements(DrawMode::Triangles, indices, AttributeType::u32);
         window.gl_swap_window();
         timer.delay(1);
     }

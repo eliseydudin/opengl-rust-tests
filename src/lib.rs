@@ -36,3 +36,13 @@ pub fn set_clear_color(r: f32, g: f32, b: f32, a: f32) {
 pub fn enable_depth() {
     unsafe { gl::Enable(gl::DEPTH_TEST) }
 }
+
+#[cfg(target_os = "macos")]
+pub fn resize_viewport(window_size: (i32, i32)) {
+    unsafe { gl::Viewport(0, 0, window_size.0 * 2, window_size.1 * 2) }
+}
+
+#[cfg(not(target_os = "macos"))]
+pub fn resize_viewport(window_size: (i32, i32)) {
+    unsafe { gl::Viewport(0, 0, window_size.0, window_size.1) }
+}
