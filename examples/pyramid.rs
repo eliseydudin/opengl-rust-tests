@@ -45,7 +45,7 @@ fn main() -> Result<(), AnyError> {
     let sdl = sdl2::init()?;
     let video = sdl.video()?;
     let window = video
-        .window("hai :3", 640, 480)
+        .window("uni pyramid", 640, 480)
         .allow_highdpi()
         .opengl()
         .resizable()
@@ -87,6 +87,7 @@ fn main() -> Result<(), AnyError> {
         }
     });
 
+    println!("{:#?}", (&mesh.texture_coords[0]).as_ref().unwrap());
     let mut texcoords = vec![];
     (0..(positions.len() / 3)).for_each(|_s| {
         texcoords.push(0.0_f32);
@@ -137,10 +138,9 @@ fn main() -> Result<(), AnyError> {
     camera.position = glm::vec3(1.0, 2.0, 0.0);
 
     // TEXTURE :D
-    let image = ImageReader::open("assets/osakr.png")?
+    let image = ImageReader::open("assets/uni.png")?
         .decode()?
-        //.flipv()
-        .fliph()
+        .flipv()
         .to_rgba8();
 
     let texture = Texture::new(
