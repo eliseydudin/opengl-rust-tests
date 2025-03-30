@@ -42,7 +42,8 @@ pub enum DrawTarget {
 #[allow(unused)]
 pub enum DrawMode {
     Triangles = gl::TRIANGLES,
-    /* TODO */
+    Quads = gl::QUADS,
+    TriangleStrip = gl::TRIANGLE_STRIP, /* TODO */
 }
 
 #[derive(Debug)]

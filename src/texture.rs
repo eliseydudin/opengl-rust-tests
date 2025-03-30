@@ -62,7 +62,7 @@ enum BoundTexture<'a> {
 }
 
 impl BoundTexture<'_> {
-    pub fn unwrap(&self) -> &Texture {
+    pub const fn unwrap(&self) -> &Texture {
         match self {
             Self::Bound(t) => t,
             _ => panic!("No texture present!"),
@@ -103,7 +103,6 @@ impl<'a> ActiveTexture<'a> {
 
     pub fn bind_texture(&mut self, texture: &'a Texture) {
         self.tex = BoundTexture::Bound(texture);
-        texture.bind(self.id);
     }
 }
 
