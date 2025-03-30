@@ -87,7 +87,6 @@ fn main() -> Result<(), AnyError> {
         }
     });
 
-    println!("{:#?}", (&mesh.texture_coords[0]).as_ref().unwrap());
     let mut texcoords = vec![];
     (0..(positions.len() / 3)).for_each(|_s| {
         texcoords.push(0.0_f32);

@@ -4,9 +4,10 @@ pub mod buffer;
 pub mod camera;
 pub mod shader;
 pub mod texture;
+pub mod texture_atlas;
 pub mod vao;
 
-pub use {buffer::*, shader::*, texture::*, vao::*};
+pub use {buffer::*, camera::*, shader::*, texture::*, texture_atlas::*, vao::*};
 pub type AnyError = Box<dyn std::error::Error>;
 
 pub struct ClearFlags(u32);

@@ -1,4 +1,5 @@
 use core::{ffi::c_void, mem, ptr};
+use std::ptr::null;
 
 #[repr(u32)]
 #[derive(Debug, Clone, Copy)]
@@ -72,6 +73,21 @@ impl Buffer {
                 (mem::size_of_val(data)) as isize,
                 data.as_ptr() as *const c_void,
                 draw_type as u32,
+            )
+        }
+    }
+
+    pub fn data_empty(&self, size: usize, draw_type: DrawUsage) {
+        unsafe { gl::BufferData(self.target as u32, size as isize, null(), draw_type as u32) }
+    }
+
+    pub fn subdata<T>(&self, offset: usize, data: &[T]) {
+        unsafe {
+            gl::BufferSubData(
+                self.target as u32,
+                offset as isize,
+                (mem::size_of_val(data)) as isize,
+                data.as_ptr() as *const c_void,
             )
         }
     }

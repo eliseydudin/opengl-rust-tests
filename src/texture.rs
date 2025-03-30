@@ -55,6 +55,7 @@ impl Drop for Texture {
     }
 }
 
+#[derive(Clone)]
 pub struct ActiveTexture {
     id: u32,
     texture_bound: Cell<bool>,
