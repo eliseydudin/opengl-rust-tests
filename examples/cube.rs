@@ -120,7 +120,7 @@ fn main() -> Result<(), AnyError> {
         );
 
         let mvp = camera.calculate_projection() * camera.calculate_view() * model;
-        program.put_uniform("mvp", mvp)?;
+        program.put_uniform("mvp", &mvp)?;
         //program.put_uniform("model", model)?;
         //program.put_uniform("view", view)?;
         //program.put_uniform("projection", projection)?;

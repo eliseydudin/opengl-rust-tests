@@ -86,7 +86,7 @@ fn main() -> Result<(), AnyError> {
         window.gl_swap_window();
 
         let time = timer.ticks() as f32 / 500.0;
-        program.put_uniform("time", time)?;
+        program.put_uniform("time", &time)?;
     }
 
     Ok(())

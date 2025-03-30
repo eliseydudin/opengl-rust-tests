@@ -2,6 +2,7 @@ use std::ffi::CStr;
 
 use crate::{
     ActiveTexture, Buffer, DrawTarget, DrawUsage, Program, Shader, ShaderError, Texture, Vao,
+    setup_attribute,
 };
 
 pub struct TextureAtlas {
@@ -55,6 +56,9 @@ impl TextureAtlas {
         let vertex_shader = Shader::from_cstr(Self::VERTEX_SHADER)?;
         let fragment_shader = Shader::from_cstr(Self::FRAGMENT_SHADER)?;
         let program = Program::new(vertex_shader, fragment_shader)?;
+        program.use_internal();
+
+        setup_attribute(0, 4, 0, 0, crate::AttributeType::f32);
 
         Ok(Self {
             texture,
@@ -71,10 +75,10 @@ impl TextureAtlas {
         let offset_y = n / w;
         let offset_x = n % w;
 
-        let offset_x = (offset_x * self.symbol_size.0) as f32 / self.texture_size.0 as f32;
-        let offset_y = (offset_y * self.symbol_size.0) as f32 / self.texture_size.0 as f32;
-
-        (offset_x, offset_y)
+        (
+            offset_x as f32 * self.symbol_size.0 as f32,
+            offset_y as f32 * self.symbol_size.0 as f32,
+        )
     }
 
     pub fn draw_text<F>(&self, data: F, (mut x, y): (f32, f32), ortho: nalgebra_glm::Mat4)

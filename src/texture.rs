@@ -1,13 +1,7 @@
 use crate::Uniform;
-use std::{cell::Cell, ffi::c_void, fmt::Debug, ptr};
+use std::{ffi::c_void, fmt::Debug, ptr};
 
 pub struct Texture(u32);
-
-impl Debug for Texture {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("Texture").field("id", &self.0).finish()
-    }
-}
 
 impl Texture {
     /// Create a new texture with the given bytes.
@@ -36,7 +30,7 @@ impl Texture {
     }
 
     /// Bind a texture to an index
-    unsafe fn bind(&self, index: u32) {
+    fn bind(&self, index: u32) {
         assert!(
             index < 32,
             "The texture index goes outside of the maximum texture range"
@@ -55,22 +49,47 @@ impl Drop for Texture {
     }
 }
 
-#[derive(Clone)]
-pub struct ActiveTexture {
-    id: u32,
-    texture_bound: Cell<bool>,
+impl Debug for Texture {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Texture").field("id", &self.0).finish()
+    }
 }
 
-impl Debug for ActiveTexture {
+#[derive(Clone)]
+enum BoundTexture<'a> {
+    Bound(&'a Texture),
+    NotBound,
+}
+
+impl BoundTexture<'_> {
+    pub fn unwrap(&self) -> &Texture {
+        match self {
+            Self::Bound(t) => t,
+            _ => panic!("No texture present!"),
+        }
+    }
+}
+
+impl Debug for BoundTexture<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("ActiveTexture")
-            .field("id", &self.id)
-            .field("texture_bound", &self.texture_bound.get())
+        let debug: &dyn Debug = match self {
+            Self::Bound(t) => *t,
+            Self::NotBound => &"<not bound>",
+        };
+
+        f.debug_struct("BoundTexture")
+            .field("value", debug)
             .finish()
     }
 }
 
-impl ActiveTexture {
+#[derive(Clone, Debug)]
+pub struct ActiveTexture<'a> {
+    id: u32,
+    tex: BoundTexture<'a>,
+}
+
+impl<'a> ActiveTexture<'a> {
     pub fn new(index: u32) -> Self {
         assert!(
             index < 32,
@@ -78,23 +97,19 @@ impl ActiveTexture {
         );
         Self {
             id: index,
-            texture_bound: Cell::new(false),
+            tex: BoundTexture::NotBound,
         }
     }
 
-    pub fn bind_texture(&self, texture: &Texture) {
-        unsafe { texture.bind(self.id) };
-        self.texture_bound.set(true)
+    pub fn bind_texture(&mut self, texture: &'a Texture) {
+        self.tex = BoundTexture::Bound(texture);
+        texture.bind(self.id);
     }
 }
 
-impl Uniform for ActiveTexture {
+impl Uniform for ActiveTexture<'_> {
     unsafe fn put_uniform(&self, location: i32) {
-        assert!(
-            self.texture_bound.get(),
-            "No texture has been bound to this ActiveTexture"
-        );
-
+        self.tex.unwrap().bind(self.id);
         unsafe { gl::Uniform1i(location, self.id as i32) }
     }
 }

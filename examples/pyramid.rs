@@ -148,9 +148,9 @@ fn main() -> Result<(), AnyError> {
         image.height() as i32,
     );
 
-    let active_texture = ActiveTexture::new(0);
+    let mut active_texture = ActiveTexture::new(0);
     active_texture.bind_texture(&texture);
-    program.put_uniform("pyramid_texture", active_texture)?;
+    program.put_uniform("pyramid_texture", &active_texture)?;
 
     let mut model = glm::Mat4::from_fn(|i, j| if i == j { 1.0 } else { 0.0 });
     let mut time_prev = timer.ticks64();
@@ -167,7 +167,7 @@ fn main() -> Result<(), AnyError> {
         );
 
         let mvp = camera.calculate_projection() * camera.calculate_view() * model;
-        program.put_uniform("mvp", mvp)?;
+        program.put_uniform("mvp", &mvp)?;
         //program.put_uniform("model", model)?;
         //program.put_uniform("view", view)?;
         //program.put_uniform("projection", projection)?;

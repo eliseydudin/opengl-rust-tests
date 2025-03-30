@@ -160,7 +160,7 @@ impl Program {
         unsafe { gl::UseProgram(self.id) }
     }
 
-    pub fn put_uniform<U>(&self, position: &str, uniform: U) -> Result<(), ShaderError>
+    pub fn put_uniform<U>(&self, position: &str, uniform: &U) -> Result<(), ShaderError>
     where
         U: Uniform,
     {
