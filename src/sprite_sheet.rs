@@ -4,6 +4,7 @@ pub struct SpriteSheet<'a> {
     texture: ActiveTexture<'a>,
 
     texture_w: f32,
+    #[expect(unused, reason = "im too lazy to fix this")]
     texture_h: f32,
 
     symbol_w: f32,
@@ -22,12 +23,12 @@ impl<'a> SpriteSheet<'a> {
     #version 330 core
 
     layout (location = 0) in vec2 position;
-    layout (location = 1) in vec2 tex_coords;
+    layout (location = 1) in ivec2 tex_coords;
     out vec2 frag_tex_coords;
 
     void main() {
         gl_Position = vec4(position, 1.0, 1.0);
-        frag_tex_coords = tex_coords;
+        frag_tex_coords = vec2(tex_coords);
     }
     ";
     const FRAGMENT_SHADER: &'static str = "
@@ -38,7 +39,7 @@ impl<'a> SpriteSheet<'a> {
     uniform sampler2D tex;
 
     void main() {
-        color = texelFetch(tex, ivec2(frag_tex_coords * 256.0), 0);
+        color = texelFetch(tex, ivec2(frag_tex_coords), 0);
     }
     ";
 
@@ -62,8 +63,8 @@ impl<'a> SpriteSheet<'a> {
 
         let buffer_tex = Buffer::new(crate::DrawTarget::Array);
         buffer_tex.bind();
-        buffer_tex.data_empty(8 * size_of::<f32>(), crate::DrawUsage::DynamicDraw);
-        setup_attribute(1, 2, 0, 0, crate::AttributeType::f32);
+        buffer_tex.data_empty(8 * size_of::<i32>(), crate::DrawUsage::DynamicDraw);
+        setup_attribute(1, 2, 0, 0, crate::AttributeType::i32);
 
         let ebo = Buffer::new(crate::DrawTarget::ElementArray);
         ebo.bind();
@@ -131,13 +132,21 @@ impl<'a> SpriteSheet<'a> {
         self.buffer_verts.bind();
         self.buffer_verts.subdata(0, &verts);
 
-        let tw = self.symbol_w / self.texture_w;
-        let th = self.symbol_h / self.texture_h;
         let num_per_row = self.texture_w / self.symbol_w;
 
-        let tx = (nth % num_per_row as u8) as f32 * tw;
-        let ty = (nth / num_per_row as u8) as f32 * th;
-        let tex_verts = [tx, ty, tx + tw, ty, tx + tw, ty + th, tx, ty + th];
+        let tx = nth % num_per_row as u8 * self.symbol_w as u8;
+        let ty = (nth / num_per_row as u8) * self.symbol_h as u8;
+
+        let tex_verts = [
+            tx as i32,
+            ty as i32,
+            tx as i32 + self.symbol_w as i32,
+            ty as i32,
+            tx as i32 + self.symbol_w as i32,
+            ty as i32 + self.symbol_h as i32,
+            tx as i32,
+            ty as i32 + self.symbol_h as i32,
+        ];
 
         self.buffer_tex.bind();
         self.buffer_tex.subdata(0, &tex_verts);
