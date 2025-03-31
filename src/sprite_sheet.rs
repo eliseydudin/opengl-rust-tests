@@ -38,7 +38,7 @@ impl<'a> SpriteSheet<'a> {
     uniform sampler2D tex;
 
     void main() {
-        color = texture(tex, frag_tex_coords);
+        color = texelFetch(tex, ivec2(frag_tex_coords * 256.0), 0);
     }
     ";
 

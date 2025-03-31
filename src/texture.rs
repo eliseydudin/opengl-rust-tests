@@ -23,10 +23,22 @@ impl Texture {
                 gl::UNSIGNED_BYTE,
                 data.as_ptr() as *const c_void,
             );
+
             gl::GenerateMipmap(gl::TEXTURE_2D);
         }
 
         Self(id)
+    }
+
+    pub fn use_gl_nearest() {
+        unsafe {
+            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::NEAREST as i32);
+            gl::TexParameteri(
+                gl::TEXTURE_2D,
+                gl::TEXTURE_MIN_FILTER,
+                gl::NEAREST_MIPMAP_NEAREST as i32,
+            );
+        }
     }
 
     /// Bind a texture to an index
