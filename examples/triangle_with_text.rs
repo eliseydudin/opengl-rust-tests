@@ -74,7 +74,7 @@ fn main() -> Result<(), AnyError> {
     setup_attribute(0, 2, 0, 5, AttributeType::f32);
     setup_attribute(1, 3, 2, 5, AttributeType::f32);
 
-    let image = ImageReader::open("assets/myfont.png")?
+    let image = ImageReader::open("assets/minogram.png")?
         .decode()?
         .flipv()
         .to_rgba8();
@@ -88,7 +88,7 @@ fn main() -> Result<(), AnyError> {
     let mut active_texture = ActiveTexture::new(0);
     active_texture.bind_texture(&texture);
 
-    let texture_atlas = SpriteSheet::new(active_texture, (256.0, 256.0), (16.0, 16.0))?;
+    let texture_atlas = SpriteSheet::new(active_texture, (78.0, 70.0), (6.0, 10.0))?;
 
     'running: loop {
         for event in events.poll_iter() {
@@ -100,7 +100,7 @@ fn main() -> Result<(), AnyError> {
 
         clear(ClearFlags::COLOR);
         vao.draw_arrays(buffer::DrawMode::Triangles, 0, 3);
-        texture_atlas.draw_several((0.0, 0.0), "abc");
+        texture_atlas.draw_several((0.0, 0.0), [0, 1, 2]);
         window.gl_swap_window();
 
         loop {

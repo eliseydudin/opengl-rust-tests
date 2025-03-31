@@ -4,7 +4,6 @@ pub struct SpriteSheet<'a> {
     texture: ActiveTexture<'a>,
 
     texture_w: f32,
-    #[expect(unused, reason = "im too lazy to fix this")]
     texture_h: f32,
 
     symbol_w: f32,
@@ -136,6 +135,8 @@ impl<'a> SpriteSheet<'a> {
 
         let tx = nth % num_per_row as u8 * self.symbol_w as u8;
         let ty = (nth / num_per_row as u8) * self.symbol_h as u8;
+        let ty = (self.texture_h - ty as f32 - self.symbol_h) as u8;
+        //ty -= 1 * self.symbol_h as u8;
 
         let tex_verts = [
             tx as i32,
