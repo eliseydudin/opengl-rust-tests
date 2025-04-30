@@ -1,5 +1,5 @@
 use gl_tests_god_save_me::*;
-use nalgebra_glm as glm;
+use nalgebra_glm::{self as glm, vec3};
 
 const CUBE_VERTICES: &[f32] = &[
     -0.5, -0.5, -0.5, 0.5, -0.5, -0.5, 0.5, 0.5, -0.5, 0.5, 0.5, -0.5, -0.5, 0.5, -0.5, -0.5, -0.5,
@@ -105,17 +105,16 @@ fn main() -> Result<(), AnyError> {
     //);
 
     //let projection = glm::perspective(640.0 / 480.0, 90.0_f32.to_radians(), 0.1, 100.0);
-    let mut model = glm::Mat4::from_fn(|i, j| if i == j { 1.0 } else { 0.0 });
-    let mut time_prev = timer.ticks64();
+    let model = glm::Mat4::from_fn(|i, j| if i == j { 1.0 } else { 0.0 });
 
     'running: loop {
         let time_current = timer.ticks64();
-        let delta = (time_current - time_prev) as f32;
-        time_prev = time_current;
 
-        model = glm::rotate(
+        let scale = (time_current as f32 / 1000.0).sin().abs();
+        let model = glm::scale(&model, &vec3(scale, scale, scale));
+        let model = glm::rotate(
             &model,
-            (delta / 25.0).to_radians(),
+            (time_current as f32 / 25.0).to_radians(),
             &glm::vec3(1.0, 0.0, 0.0),
         );
 
