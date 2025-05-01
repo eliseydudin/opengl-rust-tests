@@ -1,5 +1,6 @@
 use gl_tests_god_save_me::*;
 use nalgebra_glm::{self as glm, vec3};
+use sdl2::keyboard::Scancode;
 
 const CUBE_VERTICES: &[f32] = &[
     -0.5, -0.5, -0.5, 0.5, -0.5, -0.5, 0.5, 0.5, -0.5, 0.5, 0.5, -0.5, -0.5, 0.5, -0.5, -0.5, -0.5,
@@ -89,9 +90,9 @@ fn main() -> Result<(), AnyError> {
 
     enable_depth();
     set_clear_color(
-        0x13 as f32 / 255.0,
-        0x17 as f32 / 255.0,
-        0x21 as f32 / 255.0,
+        0x19 as f32 / 255.0,
+        0x2a as f32 / 255.0,
+        0x51 as f32 / 255.0,
         1.0,
     );
 
@@ -123,6 +124,12 @@ fn main() -> Result<(), AnyError> {
         //program.put_uniform("model", model)?;
         //program.put_uniform("view", view)?;
         //program.put_uniform("projection", projection)?;
+
+        if events.keyboard_state().is_scancode_pressed(Scancode::A) {
+            camera.fov += 0.1;
+        } else if events.keyboard_state().is_scancode_pressed(Scancode::D) {
+            camera.fov -= 0.1;
+        }
 
         for event in events.poll_iter() {
             match event {

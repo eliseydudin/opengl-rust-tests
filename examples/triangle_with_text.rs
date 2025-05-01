@@ -90,6 +90,10 @@ fn main() -> Result<(), AnyError> {
 
     let texture_atlas = SpriteSheet::new(active_texture, (78.0, 70.0), (6.0, 10.0))?;
 
+    let mut camera = Camera::new((640, 480));
+    camera.position = nalgebra_glm::vec3(1.0, 1.0, 0.0);
+    let projection = camera.calculate_projection_ortho();
+
     'running: loop {
         for event in events.poll_iter() {
             match event {
@@ -100,7 +104,7 @@ fn main() -> Result<(), AnyError> {
 
         clear(ClearFlags::COLOR);
         vao.draw_arrays(buffer::DrawMode::Triangles, 0, 3);
-        texture_atlas.draw_several((0.0, 0.0), [0, 1, 2]);
+        texture_atlas.draw_several((100.0, 100.0), [0, 1, 2], projection, 5.0);
         window.gl_swap_window();
 
         loop {

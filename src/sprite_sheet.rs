@@ -1,4 +1,5 @@
 use crate::{ActiveTexture, Buffer, Program, Shader, ShaderError, Vao, setup_attribute};
+use nalgebra_glm::Mat4;
 
 pub struct SpriteSheet<'a> {
     texture: ActiveTexture<'a>,
@@ -24,9 +25,11 @@ impl<'a> SpriteSheet<'a> {
     layout (location = 0) in vec2 position;
     layout (location = 1) in ivec2 tex_coords;
     out vec2 frag_tex_coords;
+    uniform mat4 mvp;
 
     void main() {
-        gl_Position = vec4(position, 1.0, 1.0);
+        gl_Position = mvp * vec4(position, 0.0, 1.0);
+        gl_Position.z = 0.0;
         frag_tex_coords = vec2(tex_coords);
     }
     ";
@@ -83,7 +86,7 @@ impl<'a> SpriteSheet<'a> {
         })
     }
 
-    pub fn draw_nth(&self, position: (f32, f32), nth: u8) {
+    pub fn draw_nth(&self, position: (f32, f32), nth: u8, mvp: Mat4, scale: f32) {
         /*
         const float verts[] = {
             posX, posY,
@@ -113,20 +116,16 @@ impl<'a> SpriteSheet<'a> {
         self.vao.bind();
         self.program.use_internal();
 
-        let mut verts = [
+        let verts = [
             position.0,
             position.1,
-            position.0 + self.symbol_w,
+            position.0 + self.symbol_w * scale,
             position.1,
-            position.0 + self.symbol_w,
-            position.1 + self.symbol_h,
+            position.0 + self.symbol_w * scale,
+            position.1 + self.symbol_h * scale,
             position.0,
-            position.1 + self.symbol_h,
+            position.1 + self.symbol_h * scale,
         ];
-
-        verts.iter_mut().for_each(|s| {
-            *s /= 100.0;
-        });
 
         self.buffer_verts.bind();
         self.buffer_verts.subdata(0, &verts);
@@ -156,6 +155,10 @@ impl<'a> SpriteSheet<'a> {
             .put_uniform("tex", &self.texture)
             .expect("Should not fail");
 
+        self.program
+            .put_uniform("mvp", &mvp)
+            .expect("Should not fail");
+
         unsafe {
             gl::Enable(gl::BLEND);
             gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
@@ -166,12 +169,18 @@ impl<'a> SpriteSheet<'a> {
             .draw_elements(crate::DrawMode::Triangles, 6, crate::AttributeType::u32);
     }
 
-    pub fn draw_several(&self, mut start_pos: (f32, f32), several: impl AsRef<[u8]>) {
+    pub fn draw_several(
+        &self,
+        mut start_pos: (f32, f32),
+        several: impl AsRef<[u8]>,
+        mvp: Mat4,
+        scale: f32,
+    ) {
         let several = several.as_ref();
 
         for char in several.iter() {
-            self.draw_nth(start_pos, *char);
-            start_pos.0 += self.symbol_w;
+            self.draw_nth(start_pos, *char, mvp, scale);
+            start_pos.0 += self.symbol_w * scale;
         }
     }
 }

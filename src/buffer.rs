@@ -3,7 +3,6 @@ use std::ptr::null;
 
 #[repr(u32)]
 #[derive(Debug, Clone, Copy)]
-#[allow(unused)]
 pub enum DrawUsage {
     StreamDraw = gl::STREAM_DRAW,
     StreamRead = gl::STREAM_READ,
@@ -18,7 +17,6 @@ pub enum DrawUsage {
 
 #[repr(u32)]
 #[derive(Debug, Clone, Copy)]
-#[allow(unused)]
 pub enum DrawTarget {
     Array = gl::ARRAY_BUFFER,
     AtomicCounter = gl::ATOMIC_COUNTER_BUFFER,
@@ -39,7 +37,6 @@ pub enum DrawTarget {
 #[repr(u32)]
 #[derive(Debug, Clone, Copy)]
 #[non_exhaustive]
-#[allow(unused)]
 pub enum DrawMode {
     Triangles = gl::TRIANGLES,
     Quads = gl::QUADS,

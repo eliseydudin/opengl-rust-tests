@@ -63,6 +63,17 @@ impl Camera {
         )
     }
 
+    pub fn calculate_projection_ortho(&self) -> glm::Mat4 {
+        glm::ortho(
+            0.0,
+            self.window_size.0 as f32,
+            0.0,
+            self.window_size.1 as f32,
+            Self::NEAR,
+            Self::FAR,
+        )
+    }
+
     pub fn calculate_view(&self) -> glm::Mat4 {
         glm::look_at(&-self.position, &(self.position + self.direction), &self.up)
     }
