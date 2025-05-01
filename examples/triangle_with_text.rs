@@ -133,14 +133,6 @@ fn main() -> Result<(), AnyError> {
         texture_atlas.draw_several((100.0, 100.0), &text, projection, 3.0);
         window.gl_swap_window();
 
-        loop {
-            let err = unsafe { gl::GetError() };
-            if err == 0 {
-                break;
-            }
-            println!("{err}")
-        }
-
         let time = timer.ticks() as f32 / 500.0;
         program.put_uniform("time", &time)?;
     }
