@@ -10,6 +10,30 @@ const TRIANGLE_DATA: [f32; 15] = [
     0.745, 0.8980, 0.749, // third color
 ];
 
+// convert text to indexes in `minogram.png`
+fn text_to_postions_in_atlas(text: &str) -> Vec<u8> {
+    assert!(text.is_ascii());
+
+    let mut ret = vec![];
+
+    for char in text.as_bytes() {
+        if char.is_ascii_lowercase() {
+            ret.push(*char - 71)
+        } else if char.is_ascii_uppercase() {
+            ret.push(*char - 65)
+        } else if char.is_ascii_digit() {
+            ret.push(*char + 4)
+        } else if *char == b'.' {
+            ret.push(80)
+        } else {
+            // TODO
+            ret.push(87)
+        }
+    }
+
+    ret
+}
+
 const VERTEX_SOURCE: &str = r#"
 #version 330 core
 layout (location = 0) in vec2 position;
@@ -94,6 +118,8 @@ fn main() -> Result<(), AnyError> {
     camera.position = nalgebra_glm::vec3(1.0, 1.0, 0.0);
     let projection = camera.calculate_projection_ortho();
 
+    let text = text_to_postions_in_atlas("Dingle Dongle Engine 0.0.1");
+
     'running: loop {
         for event in events.poll_iter() {
             match event {
@@ -104,7 +130,7 @@ fn main() -> Result<(), AnyError> {
 
         clear(ClearFlags::COLOR);
         vao.draw_arrays(buffer::DrawMode::Triangles, 0, 3);
-        texture_atlas.draw_several((100.0, 100.0), [0, 1, 2], projection, 5.0);
+        texture_atlas.draw_several((100.0, 100.0), &text, projection, 3.0);
         window.gl_swap_window();
 
         loop {
