@@ -3,11 +3,12 @@ use core::ops;
 pub mod buffer;
 pub mod camera;
 pub mod shader;
+pub mod sprite;
 pub mod sprite_sheet;
 pub mod texture;
 pub mod vao;
 
-pub use {buffer::*, camera::*, shader::*, sprite_sheet::*, texture::*, vao::*};
+pub use {buffer::*, camera::*, shader::*, sprite::*, sprite_sheet::*, texture::*, vao::*};
 pub type AnyError = Box<dyn std::error::Error>;
 
 pub struct ClearFlags(u32);
